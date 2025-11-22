@@ -62,15 +62,14 @@ import path from "path";
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3000;
 
 // ✅ Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ UPDATED CORS CONFIGURATION
-// This allows both your local development and your live Vercel app
+// ✅ CORS CONFIGURATION
 const allowedOrigins = [
   "http://localhost:5173",
   "https://blog-app-frontend-live.vercel.app" 
@@ -79,12 +78,10 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true, // Essential for cookies to work across domains
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
-
-const _dirname = path.resolve();
 
 // ✅ API routes
 app.use("/api/v1/user", userRoute);
@@ -92,10 +89,19 @@ app.use("/api/v1/blog", blogRoute);
 app.use("/api/v1/comment", commentRoute);
 app.use("/api/v1/upload", uploadRoutes); 
 
-// ✅ Serve React frontend build (Optional if you keep them separate, but good to leave in)
-app.use(express.static(path.join(_dirname, "/frontend/dist")));
-app.get("*", (_, res) => {
-  res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
+// ---------------------------------------------------------
+// ❌ REMOVED: Frontend Static Serving (Causes Crash on Render)
+// app.use(express.static(path.join(_dirname, "/frontend/dist")));
+// app.get("*", (_, res) => { ... });
+// ---------------------------------------------------------
+
+// ✅ ADDED: Basic Root Route
+// This stops the "Cannot GET /" error and lets you know the backend is alive.
+app.get("/", (req, res) => {
+    return res.json({
+        success: true,
+        message: "Backend is running successfully"
+    });
 });
 
 // ✅ Start server and connect DB
